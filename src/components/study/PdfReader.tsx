@@ -1,22 +1,21 @@
 "use client";
 
-import { BookOpen, ChevronLeft, ChevronRight, ExternalLink, FileText, Loader2, MessageSquarePlus, Pause, Play, ScanLine, Trash2, Type, Upload, Zap } from "lucide-react";
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { ChevronLeft, ChevronRight, FileText, Loader2, Maximize2, MessageSquarePlus, Minimize2, Minus, Pause, Play, Plus, ScanLine, StickyNote, Trash2, Upload } from "lucide-react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import { splitSentences, useSpeech } from "@/hooks/useSpeech";
 import { useStuckDetector, type StuckReason } from "@/hooks/useStuckDetector";
-import { parsePdfPage, type ParsedPage } from "@/lib/pdfParse";
+import { extractPageText } from "@/lib/pdfParse";
 import { useStudyStore } from "@/store/useStudyStore";
-import { Button, IconButton } from "@/components/ui/Button";
+import { IconButton } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Pill } from "@/components/ui/Misc";
 import { toast } from "@/components/ui/Toast";
-import { BionicText } from "./BionicText";
-import { KineticReader } from "./KineticReader";
 import { ReadingRuler } from "./ReadingRuler";
 import { StuckNudge } from "./StuckNudge";
+import { ViewerToolstrip } from "./ViewerToolstrip";
 
 type PdfJs = typeof import("pdfjs-dist");
 type PdfDocument = import("pdfjs-dist").PDFDocumentProxy;
+type FsDoc = Document & { webkitFullscreenElement?: Element | null; webkitExitFullscreen?: () => Promise<void> | void };
 
 let pdfjsPromise: Promise<PdfJs> | null = null;
 function loadPdfJs(): Promise<PdfJs> {
@@ -29,9 +28,30 @@ function loadPdfJs(): Promise<PdfJs> {
   return pdfjsPromise;
 }
 
+function fullscreenElement(): Element | null {
+  const doc = document as FsDoc;
+  return document.fullscreenElement ?? doc.webkitFullscreenElement ?? null;
+}
+
+function subscribeFullscreen(onStoreChange: () => void) {
+  document.addEventListener("fullscreenchange", onStoreChange);
+  document.addEventListener("webkitfullscreenchange", onStoreChange);
+  return () => {
+    document.removeEventListener("fullscreenchange", onStoreChange);
+    document.removeEventListener("webkitfullscreenchange", onStoreChange);
+  };
+}
+
+function pdfHash(page: number, zoom: number) {
+  const bits = [`page=${page}`, "toolbar=0", "navpanes=0", "scrollbar=0"];
+  if (zoom === 1) bits.push("view=FitH");
+  else bits.push(`zoom=${Math.round(zoom * 100)}`);
+  return bits.join("&");
+}
+
 /**
- * Original page stays visible. Parsing (text, figures, OCR) happens beside it
- * for kinetic / bionic / read-aloud — never instead of the PDF.
+ * The uploaded file itself, one page at a time — the browser's PDF engine,
+ * not a reconstructed transcript. Music and notes stay in the thin toolbar.
  */
 export function PdfReader() {
   const pdfs = useStudyStore((s) => s.pdfs);
@@ -40,48 +60,45 @@ export function PdfReader() {
   const setPdfGoal = useStudyStore((s) => s.setPdfGoal);
   const addPdfNote = useStudyStore((s) => s.addPdfNote);
   const removePdfNote = useStudyStore((s) => s.removePdfNote);
-  const kinetic = useStudyStore((s) => s.kinetic);
-  const setKinetic = useStudyStore((s) => s.setKinetic);
 
   const [doc, setDoc] = useState<PdfDocument | null>(null);
-  const [pdfjs, setPdfjs] = useState<PdfJs | null>(null);
   const [key, setKey] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [startPage, setStartPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [parsedHold, setParsedHold] = useState<{ key: string; page: number; data: ParsedPage } | null>(null);
-  const [ocrToken, setOcrToken] = useState<string | null>(null);
-  const [bionic, setBionic] = useState(false);
+  const [pageText, setPageText] = useState("");
   const [ruler, setRuler] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [note, setNote] = useState("");
-  const [rate, setRate] = useState(1);
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
+  const [zoom, setZoom] = useState(1);
   const [fileName, setFileName] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
 
-  const canvasRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
-  const parseRef = useRef<HTMLDivElement>(null);
-  const renderTask = useRef<{ cancel: () => void } | null>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
   const fileUrlRef = useRef<string | null>(null);
   const speech = useSpeech();
 
-  const parsed = parsedHold && parsedHold.key === key && parsedHold.page === page ? parsedHold.data : null;
-  const ocrRunning = ocrToken === `${key}:${page}`;
-  const pageText = parsed?.text ?? "";
+  const viewerFs = useSyncExternalStore(
+    subscribeFullscreen,
+    () => Boolean(fullscreenElement()?.hasAttribute("data-pdf-viewer")),
+    () => false,
+  );
+
   const [stuck, setStuck] = useState<StuckReason | null>(null);
   useStuckDetector({
-    target: parseRef,
+    target: frameRef,
     contextKey: `${key ?? ""}:${page}`,
-    enabled: !!doc && !!pageText && !kinetic,
+    enabled: !!doc && !!pageText,
     onStuck: setStuck,
   });
 
   const session = key ? pdfs[key] : undefined;
   const pagesRead = Math.max(0, page - startPage + 1);
   const goal = session?.pageGoal ?? 3;
-  const goalDone = pagesRead >= goal;
+  const recents = Object.values(pdfs).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
 
   const openFile = useCallback(
     async (file: File) => {
@@ -91,7 +108,7 @@ export function PdfReader() {
       }
       setError(null);
       setLoading(true);
-      speech.stop();
+      if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
       try {
         const lib = await loadPdfJs();
         const data = await file.arrayBuffer();
@@ -105,21 +122,21 @@ export function PdfReader() {
         fileUrlRef.current = url;
         setFileUrl(url);
         setFileName(file.name);
-        setPdfjs(lib);
         setDoc(loaded);
         setKey(k);
         setPage(first);
         setStartPage(first);
-        setParsedHold(null);
+        setZoom(1);
+        setPageText("");
         upsertPdf({ key: k, name: file.name, pageCount: loaded.numPages });
-        toast(prev ? `Back to page ${first}.` : `Opened. ${loaded.numPages} pages — original stays on the left.`);
+        toast(prev ? `Back to page ${first}.` : `Opened. ${loaded.numPages} pages.`);
       } catch {
         setError("Couldn't open that file. It may be encrypted or damaged.");
       } finally {
         setLoading(false);
       }
     },
-    [doc, upsertPdf, speech],
+    [doc, upsertPdf],
   );
 
   const onPick = (e: ChangeEvent<HTMLInputElement>) => {
@@ -139,68 +156,52 @@ export function PdfReader() {
     if (fileUrlRef.current) URL.revokeObjectURL(fileUrlRef.current);
   }, []);
 
-  // Render the original page, then parse beside it.
   useEffect(() => {
-    if (!doc || !key || !pdfjs) return;
+    if (!doc || !key) return;
     let cancelled = false;
-    const token = `${key}:${page}`;
     (async () => {
       try {
         const p = await doc.getPage(page);
-        const frameWidth = frameRef.current?.clientWidth ?? 700;
-        const base = p.getViewport({ scale: 1 });
-        const scale = Math.min(2.4, Math.max(0.6, (frameWidth - 2) / base.width));
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const viewport = p.getViewport({ scale });
-
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-        canvas.width = Math.floor(viewport.width * dpr);
-        canvas.height = Math.floor(viewport.height * dpr);
-        canvas.style.width = `${Math.floor(viewport.width)}px`;
-        canvas.style.height = `${Math.floor(viewport.height)}px`;
-        renderTask.current?.cancel();
-        const task = p.render({ canvas, canvasContext: ctx, viewport, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined });
-        renderTask.current = task;
-        await task.promise.catch(() => {});
+        const text = await extractPageText(p);
         if (cancelled) return;
         setPdfPage(key, page);
-
-        const cssWidth = Math.floor(viewport.width);
-        const cssHeight = Math.floor(viewport.height);
-        const result = await parsePdfPage({
-          pdfjs,
-          page: p,
-          pageCanvas: canvas,
-          cssWidth,
-          cssHeight,
-          runOcr: true,
-          onOcrStart: () => {
-            if (!cancelled) setOcrToken(token);
-          },
-        });
-        if (cancelled) return;
-        setParsedHold({ key, page, data: result });
-        setOcrToken((cur) => (cur === token ? null : cur));
+        setPageText(text);
       } catch {
-        if (!cancelled) setError("Couldn't render that page.");
+        if (!cancelled) setError("Couldn't read that page.");
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [doc, key, page, pdfjs, setPdfPage]);
+  }, [doc, key, page, setPdfPage]);
 
   useEffect(() => () => void doc?.loadingTask.destroy(), [doc]);
 
-  const go = (next: number) => {
+  const go = useCallback(
+    (next: number) => {
+      if (!doc) return;
+      speech.stop();
+      setPage(Math.min(doc.numPages, Math.max(1, next)));
+    },
+    [doc, speech],
+  );
+
+  useEffect(() => {
     if (!doc) return;
-    const clamped = Math.min(doc.numPages, Math.max(1, next));
-    speech.stop();
-    setPage(clamped);
-  };
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || t?.isContentEditable) return;
+      if (e.key === "ArrowRight" || e.key === "PageDown") {
+        e.preventDefault();
+        go(page + 1);
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        go(page - 1);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [doc, page, go]);
 
   const saveNote = (e: FormEvent) => {
     e.preventDefault();
@@ -210,10 +211,23 @@ export function PdfReader() {
     toast(`Noted on page ${page}.`);
   };
 
-  const sentences = splitSentences(pageText);
-  const recents = Object.values(pdfs).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 5);
+  const toggleViewerFs = () => {
+    const stage = viewerRef.current;
+    if (!stage) return;
+    if (viewerFs) {
+      const exit = document.exitFullscreen?.bind(document) ?? (document as FsDoc).webkitExitFullscreen?.bind(document);
+      void Promise.resolve(exit?.()).catch(() => undefined);
+      return;
+    }
+    const req =
+      stage.requestFullscreen?.bind(stage) ??
+      (stage as HTMLElement & { webkitRequestFullscreen?: () => void }).webkitRequestFullscreen?.bind(stage);
+    void Promise.resolve(req?.()).catch(() => undefined);
+  };
 
-  if (!doc) {
+  const sentences = splitSentences(pageText);
+
+  if (!doc || !fileUrl) {
     return (
       <div className="flex flex-col gap-5">
         <label
@@ -226,7 +240,7 @@ export function PdfReader() {
         >
           {loading ? <Loader2 className="size-8 animate-spin text-ink-faint" /> : <Upload className="size-8 text-ink-faint" />}
           <div className="text-ink">{loading ? "Opening…" : "Drop a PDF here, or click to choose"}</div>
-          <p className="max-w-sm text-sm text-ink-muted">Stays on your device. The original page stays put; we parse text and figures beside it for reading tools.</p>
+          <p className="max-w-sm text-sm text-ink-muted">Stays on your device. You read the original file, one page at a time — like a normal PDF viewer.</p>
           <input type="file" accept="application/pdf,.pdf" onChange={onPick} className="sr-only" />
         </label>
         {error ? <p className="text-sm text-urgent">{error}</p> : null}
@@ -248,165 +262,114 @@ export function PdfReader() {
     );
   }
 
+  const src = `${fileUrl}#${pdfHash(page, zoom)}`;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2 text-sm">
+    <div ref={viewerRef} data-pdf-viewer className="pdf-viewer flex min-h-[70vh] flex-col overflow-hidden rounded-2xl border border-border bg-[#3a434c] shadow-soft">
+      <div className="pdf-toolbar relative z-30 flex shrink-0 flex-wrap items-center gap-1 border-b border-black/20 bg-surface-raised/95 px-2 py-1.5 backdrop-blur">
+        <span className="mr-2 hidden max-w-[10rem] truncate px-1 text-xs text-ink-muted sm:inline" title={fileName ?? undefined}>
+          {fileName}
+        </span>
+
         <div className="inline-flex items-center rounded-lg border border-border">
           <IconButton label="Previous page" onClick={() => go(page - 1)} disabled={page <= 1}><ChevronLeft className="size-4" /></IconButton>
-          <form onSubmit={(e) => { e.preventDefault(); const v = Number((e.currentTarget.elements.namedItem("p") as HTMLInputElement).value); if (v) go(v); }} className="flex items-center gap-1 px-1 text-xs text-ink-muted">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const v = Number((e.currentTarget.elements.namedItem("p") as HTMLInputElement).value);
+              if (v) go(v);
+            }}
+            className="flex items-center gap-1 px-1 text-xs text-ink-muted"
+          >
             <input name="p" key={page} defaultValue={page} inputMode="numeric" aria-label="Page number" className="w-10 rounded bg-transparent text-center tabular-nums text-ink focus:outline-none" />
             / {doc.numPages}
           </form>
           <IconButton label="Next page" onClick={() => go(page + 1)} disabled={page >= doc.numPages}><ChevronRight className="size-4" /></IconButton>
         </div>
 
-        <Button variant={ruler ? "soft" : "ghost"} size="sm" onClick={() => setRuler((r) => !r)} aria-pressed={ruler}><ScanLine className="size-4" /> Ruler</Button>
-        <Button variant={kinetic ? "soft" : "ghost"} size="sm" onClick={() => { speech.stop(); setKinetic(!kinetic); }} aria-pressed={kinetic} title="Blur what's ahead; clear a tiny puzzle to unlock the next section"><Zap className="size-4" /> Kinetic</Button>
-        <Button variant={bionic ? "soft" : "ghost"} size="sm" onClick={() => setBionic((b) => !b)} aria-pressed={bionic}><Type className="size-4" /> Bionic</Button>
-
-        {fileUrl ? (
-          <a href={fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-ink-muted hover:text-ink">
-            <ExternalLink className="size-3.5" /> Original file{fileName ? ` · ${fileName}` : ""}
-          </a>
-        ) : null}
-
-        {speech.supported && pageText ? (
-          <div className="ml-auto flex items-center gap-2">
-            <select value={rate} onChange={(e) => setRate(Number(e.target.value))} aria-label="Reading speed" className="rounded-lg border border-border bg-surface-raised px-2 py-1 text-xs text-ink">
-              {[0.8, 1, 1.2, 1.4, 1.7].map((r) => <option key={r} value={r}>{r}×</option>)}
-            </select>
-            {speech.speaking ? (
-              <Button variant="secondary" size="sm" onClick={speech.stop}><Pause className="size-4" /> Stop</Button>
-            ) : (
-              <Button variant="secondary" size="sm" onClick={() => speech.speakFrom(sentences, 0, rate)}><Play className="size-4" /> Read parsed text</Button>
-            )}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-surface-raised px-4 py-2.5 text-sm">
-        <span className="text-ink-muted">This sitting:</span>
-        <div className="inline-flex items-center gap-1">
-          {[1, 2, 3, 5, 8].map((g) => (
-            <button key={g} type="button" onClick={() => key && setPdfGoal(key, g)} aria-pressed={goal === g} className={`rounded-full border px-2.5 py-0.5 text-xs ${goal === g ? "border-accent bg-accent-soft text-ink" : "border-border text-ink-muted hover:text-ink"}`}>{g} page{g === 1 ? "" : "s"}</button>
-          ))}
+        <div className="inline-flex items-center rounded-lg border border-border">
+          <IconButton label="Zoom out" onClick={() => setZoom((z) => Math.max(0.5, Math.round((z - 0.15) * 100) / 100))}><Minus className="size-3.5" /></IconButton>
+          <span className="w-12 text-center font-mono text-[11px] tabular-nums text-ink-muted">{Math.round(zoom * 100)}%</span>
+          <IconButton label="Zoom in" onClick={() => setZoom((z) => Math.min(2.5, Math.round((z + 0.15) * 100) / 100))}><Plus className="size-3.5" /></IconButton>
         </div>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="h-1.5 w-28 overflow-hidden rounded-full bg-surface-sunken" role="progressbar" aria-valuenow={Math.min(pagesRead, goal)} aria-valuemin={0} aria-valuemax={goal}>
-            <div className="h-full bg-accent transition-[width]" style={{ width: `${Math.min(100, (pagesRead / goal) * 100)}%` }} />
-          </div>
-          {goalDone ? <Pill tone="sage">Goal met — stop or keep going, both fine</Pill> : <span className="text-xs tabular-nums text-ink-faint">{pagesRead}/{goal}</span>}
-        </div>
-      </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(0,0.95fr)]">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2 text-xs text-ink-faint">
-            <BookOpen className="size-3.5" /> Original page
-          </div>
-          <ReadingRuler enabled={ruler} height={64}>
-            <div ref={frameRef} className="overflow-auto rounded-2xl border border-border bg-surface-sunken/60 p-2 shadow-soft">
-              <div className="flex justify-center">
-                <canvas ref={canvasRef} className="max-w-full rounded-md bg-surface shadow-soft" aria-label={`Original PDF page ${page}`} />
+        <span className="mx-1 hidden h-4 w-px bg-border sm:inline-block" />
+
+        <IconButton label="Reading ruler" onClick={() => setRuler((r) => !r)} aria-pressed={ruler} className={ruler ? "bg-accent-soft text-ink" : ""}>
+          <ScanLine className="size-4" />
+        </IconButton>
+
+        <div className="relative">
+          <IconButton label="Page notes" onClick={() => setNotesOpen((o) => !o)} aria-pressed={notesOpen} className={notesOpen ? "bg-accent-soft text-ink" : ""}>
+            <StickyNote className="size-4" />
+          </IconButton>
+          {notesOpen ? (
+            <div className="absolute left-0 top-full z-50 mt-2 w-[min(20rem,calc(100vw-2rem))] rounded-xl border border-border bg-surface-raised p-3 shadow-soft">
+              <form onSubmit={saveNote} className="flex items-center gap-2">
+                <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={`Note for page ${page}`} aria-label="Page note" />
+                <IconButton label="Save note" type="submit" className="shrink-0 bg-accent-soft text-ink"><MessageSquarePlus className="size-4" /></IconButton>
+              </form>
+              {session && session.notes.length > 0 ? (
+                <ul className="mt-2 flex max-h-40 flex-col gap-1 overflow-y-auto">
+                  {session.notes.map((n) => (
+                    <li key={n.id} className="group flex items-start gap-2 text-sm">
+                      <button type="button" onClick={() => go(n.at)} className="shrink-0 font-mono text-xs text-mist-600 hover:underline dark:text-mist-300">p.{n.at}</button>
+                      <span className="flex-1 text-ink">{n.text}</span>
+                      <button type="button" onClick={() => key && removePdfNote(key, n.id)} aria-label="Delete note" className="text-ink-faint opacity-0 group-hover:opacity-100"><Trash2 className="size-3.5" /></button>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-2 text-xs text-ink-faint">Notes stay attached to the page.</p>
+              )}
+              <div className="mt-2 flex flex-wrap gap-1">
+                <span className="mr-1 self-center text-[11px] text-ink-faint">this sitting</span>
+                {[1, 2, 3, 5, 8].map((g) => (
+                  <button key={g} type="button" onClick={() => key && setPdfGoal(key, g)} aria-pressed={goal === g} className={`rounded-full border px-2 py-0.5 text-[11px] ${goal === g ? "border-accent bg-accent-soft text-ink" : "border-border text-ink-muted"}`}>{g}p</button>
+                ))}
+                <span className="self-center text-[11px] tabular-nums text-ink-faint">{Math.min(pagesRead, goal)}/{goal}</span>
               </div>
             </div>
-          </ReadingRuler>
+          ) : null}
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2 text-xs text-ink-faint">
-            <Type className="size-3.5" /> Parsed for study
-            {ocrRunning ? (
-              <span className="inline-flex items-center gap-1 text-ink-muted"><Loader2 className="size-3 animate-spin" /> OCR…</span>
-            ) : parsed?.source === "ocr" ? (
-              <span>from scan</span>
-            ) : parsed?.source === "mixed" ? (
-              <span>text + figure OCR</span>
-            ) : parsed ? (
-              <span>embedded text</span>
-            ) : (
-              <span>reading page…</span>
-            )}
-          </div>
-          <div ref={parseRef} className="min-h-[12rem] overflow-auto rounded-2xl border border-border bg-surface-raised shadow-soft">
-            {kinetic && pageText && !(speech.speaking || speech.currentIndex >= 0) ? (
-              <div className="px-2 py-4 text-[1.05rem] sm:px-4">
-                <KineticReader
-                  key={`${key}:${page}`}
-                  text={pageText}
-                  bionic={bionic}
-                  className="[&>article]:border-0 [&>article]:shadow-none"
-                  finale={
-                    page < doc.numPages ? (
-                      <Button variant="soft" size="sm" onClick={() => go(page + 1)}>
-                        Page {page + 1} <ChevronRight className="size-4" />
-                      </Button>
-                    ) : (
-                      <span className="text-ink-muted">Last page. That&apos;s the document.</span>
-                    )
-                  }
-                />
-              </div>
-            ) : (
-              <article className="flex flex-col gap-4 px-5 py-6 text-[1.05rem] leading-relaxed text-ink sm:px-7">
-                {parsed?.blocks.length ? (
-                  parsed.blocks.map((block, i) =>
-                    block.type === "figure" ? (
-                      <figure key={block.figure.id} className="overflow-hidden rounded-xl border border-border bg-surface">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={block.figure.src} alt={block.figure.label || "Figure from this page"} className="mx-auto max-h-[28rem] w-auto max-w-full object-contain" />
-                        {block.figure.label ? <figcaption className="px-3 py-2 text-sm text-ink-muted">{block.figure.label}</figcaption> : <figcaption className="px-3 py-2 text-xs text-ink-faint">Figure on this page</figcaption>}
-                        {block.figure.ocr ? <p className="border-t border-border px-3 py-2 text-sm text-ink">{bionic ? <BionicText text={block.figure.ocr} enabled /> : block.figure.ocr}</p> : null}
-                      </figure>
-                    ) : speech.speaking || speech.currentIndex >= 0 ? (
-                      <p key={`t-${i}`}>
-                        {splitSentences(block.text).map((s, si) => {
-                          const all = sentences;
-                          const idx = all.indexOf(s);
-                          return (
-                            <span key={si}>
-                              <button type="button" onClick={() => speech.speakFrom(all, idx >= 0 ? idx : 0, rate)} className={`rounded px-0.5 text-left ${idx === speech.currentIndex ? "bg-accent-soft" : "hover:bg-surface-sunken"}`}>{s}</button>{" "}
-                            </span>
-                          );
-                        })}
-                      </p>
-                    ) : (
-                      <div key={`t-${i}`}><BionicText text={block.text} enabled={bionic} /></div>
-                    ),
-                  )
-                ) : ocrRunning ? (
-                  <p className="text-ink-muted">Reading this scan. The original page stays on the left.</p>
-                ) : (
-                  <p className="text-ink-faint">No selectable text yet — the original page is still there. If this is a scan, OCR will fill this pane.</p>
-                )}
-              </article>
-            )}
-          </div>
-
-          <form onSubmit={saveNote} className="flex items-center gap-2">
-            <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder={`Note for page ${page}`} aria-label="Page note" />
-            <IconButton label="Save note" type="submit" className="shrink-0 bg-accent-soft text-ink"><MessageSquarePlus className="size-4" /></IconButton>
-          </form>
-          {session && session.notes.length > 0 ? (
-            <ul className="flex max-h-[16rem] flex-col gap-1.5 overflow-y-auto pr-1">
-              {session.notes.map((n) => (
-                <li key={n.id} className="group flex items-start gap-2 rounded-xl border border-border bg-surface-raised px-3 py-2 text-sm">
-                  <button type="button" onClick={() => go(n.at)} className="shrink-0 font-mono text-xs text-mist-600 hover:underline dark:text-mist-300">p.{n.at}</button>
-                  <span className="flex-1 text-ink">{n.text}</span>
-                  <button type="button" onClick={() => key && removePdfNote(key, n.id)} aria-label="Delete note" className="text-ink-faint opacity-0 group-hover:opacity-100 focus:opacity-100"><Trash2 className="size-3.5" /></button>
-                </li>
-              ))}
-            </ul>
+        {speech.supported && pageText ? (
+          speech.speaking ? (
+            <IconButton label="Stop reading" onClick={speech.stop}><Pause className="size-4" /></IconButton>
           ) : (
-            <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-sm text-ink-faint">Page notes land here. Click one to jump to its page.</p>
-          )}
-          <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-border px-3 py-2 text-sm text-ink-muted hover:text-ink">
-            <Upload className="size-4" /> Open a different PDF
-            <input type="file" accept="application/pdf,.pdf" onChange={onPick} className="sr-only" />
-          </label>
+            <IconButton label="Read page aloud" onClick={() => speech.speakFrom(sentences, 0, 1)}>
+              <Play className="size-4" />
+            </IconButton>
+          )
+        ) : null}
+
+        <div className="ml-auto flex items-center gap-0.5">
+          <ViewerToolstrip
+            extra={
+              <label className="inline-flex cursor-pointer">
+                <span className="inline-flex size-9 items-center justify-center rounded-lg text-ink-faint transition-colors hover:bg-surface-sunken hover:text-ink" title="Open a different PDF">
+                  <Upload className="size-4" />
+                </span>
+                <span className="sr-only">Open a different PDF</span>
+                <input type="file" accept="application/pdf,.pdf" onChange={onPick} className="sr-only" />
+              </label>
+            }
+          />
+          <IconButton label={viewerFs ? "Exit fullscreen" : "Fullscreen"} onClick={toggleViewerFs}>
+            {viewerFs ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
+          </IconButton>
         </div>
       </div>
-      {error ? <p className="text-sm text-urgent">{error}</p> : null}
+
+      <ReadingRuler enabled={ruler} height={64} className="flex min-h-0 flex-1 flex-col">
+        <div ref={frameRef} className="pdf-stage min-h-0 flex-1 overflow-hidden bg-[#525659]">
+          <object key={src} data={src} type="application/pdf" className="h-full w-full" aria-label={`${fileName ?? "PDF"} page ${page}`}>
+            <iframe title={fileName ?? "PDF"} src={src} className="h-full w-full border-0 bg-[#525659]" />
+          </object>
+        </div>
+      </ReadingRuler>
+
+      {error ? <p className="bg-surface-raised px-3 py-2 text-sm text-urgent">{error}</p> : null}
       {pageText ? <StuckNudge open={stuck !== null} reason={stuck} variant={{ kind: "reading", text: pageText }} onClose={() => setStuck(null)} /> : null}
     </div>
   );

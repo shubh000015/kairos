@@ -36,7 +36,7 @@ export function DistractionParkingLot() {
     },
     () => {
       const el = document.fullscreenElement ?? (document as Document & { webkitFullscreenElement?: Element | null }).webkitFullscreenElement;
-      return Boolean(el?.hasAttribute("data-study-studio"));
+      return Boolean(el?.hasAttribute("data-study-studio") || el?.hasAttribute("data-pdf-viewer"));
     },
     () => false,
   );

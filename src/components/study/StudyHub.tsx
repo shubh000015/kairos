@@ -14,7 +14,7 @@ type Tab = "lecture" | "pdf" | "read" | "listen" | "search";
 
 const TABS: Array<{ id: Tab; label: string; blurb: string; icon: React.ReactNode }> = [
   { id: "lecture", label: "Lecture", blurb: "YouTube, in chunks", icon: <MonitorPlay className="size-4" /> },
-  { id: "pdf", label: "PDF", blurb: "One page at a time", icon: <FileText className="size-4" /> },
+  { id: "pdf", label: "PDF", blurb: "The original file", icon: <FileText className="size-4" /> },
   { id: "read", label: "Reader", blurb: "Paste anything", icon: <Type className="size-4" /> },
   { id: "listen", label: "Listen", blurb: "Read-aloud on hotkeys", icon: <Headphones className="size-4" /> },
   { id: "search", label: "Search", blurb: "Your notes, by meaning", icon: <Search className="size-4" /> },
@@ -42,11 +42,11 @@ export function StudyHub() {
 
 function StudyHubInner({ tab, onTab }: { tab: Tab; onTab: (id: Tab) => void }) {
   const studio = useStudyStudio();
-  const compact = Boolean(studio?.fullscreen);
+  const compact = Boolean(studio?.fullscreen) || tab === "pdf";
 
   return (
-    <div className="flex flex-col gap-6">
-      <div role="tablist" aria-label="Study tools" className={compact ? "study-tabs flex flex-wrap gap-1" : "study-tabs grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"}>
+    <div className={`flex min-h-0 flex-col ${tab === "pdf" ? "flex-1 gap-3" : "gap-6"}`}>
+      <div role="tablist" aria-label="Study tools" className={compact ? "study-tabs flex shrink-0 flex-wrap gap-1" : "study-tabs grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"}>
         {TABS.map((t) => {
           const active = t.id === tab;
           return (
@@ -70,7 +70,7 @@ function StudyHubInner({ tab, onTab }: { tab: Tab; onTab: (id: Tab) => void }) {
         })}
       </div>
 
-      <div role="tabpanel" className="rise-in" key={tab}>
+      <div role="tabpanel" className={`rise-in ${tab === "pdf" ? "flex min-h-0 flex-1 flex-col" : ""}`} key={tab}>
         {tab === "lecture" ? (
           <VideoStudy />
         ) : tab === "pdf" ? (

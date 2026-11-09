@@ -289,3 +289,22 @@ export async function parsePdfPage(opts: {
   const finalBlocks = blocks.length ? blocks : textFromPdf ? [{ type: "text" as const, text: textFromPdf, y: 0 }] : [];
   return { blocks: finalBlocks, text: blocksToPlain(finalBlocks), figures: kept, source };
 }
+
+/** Embedded PDF text only — used for kinetic puzzles and read-aloud, never shown as a second view. */
+export async function extractPageText(page: PdfPage): Promise<string> {
+  const base = page.getViewport({ scale: 1 });
+  const content = await page.getTextContent();
+  const tokens: Token[] = [];
+  for (const it of content.items) {
+    if (!("str" in it) || !it.str) continue;
+    const tr = it.transform as number[];
+    const [x, y] = base.convertToViewportPoint(tr[4], tr[5]);
+    const h = Math.max(it.height || Math.hypot(tr[2], tr[3]), 4);
+    const w = it.width || Math.max(8, it.str.length * h * 0.45);
+    tokens.push({ str: it.str, x, y: y - h, w, h, hasEOL: Boolean(it.hasEOL) });
+  }
+  return reconstructLines(tokens, base.width)
+    .map((l) => l.text)
+    .join("\n")
+    .trim();
+}

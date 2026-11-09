@@ -4,20 +4,22 @@
       <stop offset="0" stop-color="#F7F5F0"/>
       <stop offset="1" stop-color="#EBE9E1"/>
     </linearGradient>
-    <linearGradient id="ring" x1="10" y1="54" x2="54" y2="10" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#6B7A8F"/>
-      <stop offset="0.5" stop-color="#84A59D"/>
-      <stop offset="1" stop-color="#A8C0B9"/>
-    </linearGradient>
-    <radialGradient id="core" cx="0.35" cy="0.3" r="1.1">
-      <stop offset="0" stop-color="#46535f"/>
-      <stop offset="1" stop-color="#2C363F"/>
-    </radialGradient>
   </defs>
   <rect width="64" height="64" rx="16" fill="url(#tile)"/>
-  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="15.25" fill="none" stroke="#2C363F" stroke-opacity="0.08" stroke-width="1.5"/>
-  <path d="M 50.56 31.17 A 22 22 0 1 1 32.83 9.44" fill="none" stroke="url(#ring)" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="45.6" cy="17.1" r="3.1" fill="#E27D60"/>
-  <circle cx="32" cy="32" r="6" fill="url(#core)"/>
-  <circle cx="30.2" cy="30.2" r="1.5" fill="#F7F5F0" fill-opacity="0.55"/>
+  <g fill="none" stroke="#84A59D" stroke-linecap="round" stroke-linejoin="round" transform="translate(4 11.5) scale(0.466)">
+    <path d="M26 47C38 22 84 18 96 42" stroke-width="3.4"/>
+    <path d="M22 49C36 74 88 76 100 46" stroke-width="3.4"/>
+    <circle cx="60" cy="44" r="18.2" stroke-width="2.4"/>
+    <circle cx="60" cy="44" r="12.2" stroke-width="2.2"/>
+    <circle cx="60" cy="44" r="6.6" stroke-width="2.2"/>
+    <line x1="60" y1="24.8" x2="60" y2="17.6" stroke-width="2.2"/>
+    <line x1="73.57" y1="30.37" x2="78.66" y1="25.28" stroke-width="2.2"/>
+    <line x1="79.2" y1="44" x2="86.4" y1="44" stroke-width="2.2"/>
+    <line x1="73.57" y1="57.63" x2="78.66" y1="62.72" stroke-width="2.2"/>
+    <line x1="60" y1="63.2" x2="60" y2="70.4" stroke-width="2.2"/>
+    <line x1="46.43" y1="57.63" x2="41.34" y1="62.72" stroke-width="2.2"/>
+    <line x1="40.8" y1="44" x2="33.6" y1="44" stroke-width="2.2"/>
+    <line x1="46.43" y1="30.37" x2="41.34" y1="25.28" stroke-width="2.2"/>
+  </g>
+  <circle cx="32" cy="32" r="1.55" fill="#84A59D"/>
 </svg>

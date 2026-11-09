@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { SOUNDSCAPE_OPTIONS, tensionFor } from "@/lib/soundscape";
 import { getRemainingMs, useFocusStore } from "@/store/useFocusStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useYouTubeAudioStore } from "@/store/useYouTubeAudioStore";
 
 /**
  * Soundscape picker. Playback is owned by SoundscapeHost in the app shell so
@@ -41,7 +42,10 @@ export function SoundscapePlayer({ remainingMs, compact = false }: { remainingMs
               role="radio"
               aria-checked={kind === o.value}
               title={o.hint}
-              onClick={() => set("soundscape", o.value)}
+              onClick={() => {
+                set("soundscape", o.value);
+                if (o.value !== "off") useYouTubeAudioStore.getState().pause();
+              }}
               className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 kind === o.value ? "bg-surface-raised text-ink shadow-soft" : "text-ink-muted hover:text-ink"
               }`}

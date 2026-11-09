@@ -41,7 +41,7 @@ export interface StudyState {
   /** Scratch text for the Reader tab. */
   readerText: string;
   readerFontSize: number;
-  /** Kinetic Reading (blur-below + speedbumps) preference for the Reader and PDF text view. */
+  /** Kinetic Reading (blur-below + speedbumps) for pasted text in Reader. PDFs never use this. */
   kinetic: boolean;
   /** How far the reader got through the current pasted text, in unlocked sections. */
   readerKineticUnlocked: number;
@@ -74,7 +74,7 @@ export const useStudyStore = create<StudyState>()(
       pdfs: {},
       readerText: "",
       readerFontSize: 20,
-      kinetic: true,
+      kinetic: false,
       readerKineticUnlocked: 0,
       speedbumpsCleared: 0,
 

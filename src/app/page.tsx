@@ -273,7 +273,7 @@ study_plan_from_material`}</pre>
 
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-8 text-sm text-ink-faint md:px-8">
-          <Logo compact />
+          <Logo stacked />
           <p className="inline-flex items-center gap-2"><Brain className="size-4" /> Not a medical device. Informed by CBT for ADHD and executive-function research.</p>
           <div className="flex gap-4">
             <Link href="/app" className="hover:text-ink">App</Link>

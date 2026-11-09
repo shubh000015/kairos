@@ -9,6 +9,7 @@ import { useRoutineStore } from "./useRoutineStore";
 import { useSettingsStore } from "./useSettingsStore";
 import { useStudyStore } from "./useStudyStore";
 import { useTaskStore } from "./useTaskStore";
+import { useYouTubeAudioStore } from "./useYouTubeAudioStore";
 
 /** Every persisted store. Used for hydration, export, import and reset. */
 export const ALL_STORES = [
@@ -22,6 +23,7 @@ export const ALL_STORES = [
   useRewardStore,
   usePodStore,
   useAudioEngineStore,
+  useYouTubeAudioStore,
 ] as const;
 
 export const EXPORT_VERSION = 1;

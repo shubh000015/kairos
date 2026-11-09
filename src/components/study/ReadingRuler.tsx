@@ -6,7 +6,17 @@ import { useCallback, useRef, useState, type ReactNode } from "react";
  * Wraps content and, when enabled, dims everything except a horizontal band that
  * follows the pointer — a digital version of the finger-under-the-line trick.
  */
-export function ReadingRuler({ enabled, height = 72, children }: { enabled: boolean; height?: number; children: ReactNode }) {
+export function ReadingRuler({
+  enabled,
+  height = 72,
+  children,
+  className = "",
+}: {
+  enabled: boolean;
+  height?: number;
+  children: ReactNode;
+  className?: string;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const [y, setY] = useState<number | null>(null);
 
@@ -17,7 +27,7 @@ export function ReadingRuler({ enabled, height = 72, children }: { enabled: bool
   }, []);
 
   return (
-    <div ref={ref} onPointerMove={enabled ? onMove : undefined} onPointerLeave={() => setY(null)} className="relative">
+    <div ref={ref} onPointerMove={enabled ? onMove : undefined} onPointerLeave={() => setY(null)} className={`relative ${className}`}>
       {children}
       {enabled && y !== null ? (
         <div

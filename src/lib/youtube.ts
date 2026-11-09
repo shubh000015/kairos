@@ -28,8 +28,43 @@ export interface YTPlayer {
   getPlayerState(): number;
   setPlaybackRate(rate: number): void;
   getPlaybackRate(): number;
+  setVolume?(n: number): void;
+  loadVideoById?(id: string | { videoId: string; startSeconds?: number }): void;
+  cueVideoById?(id: string | { videoId: string; startSeconds?: number }): void;
   getVideoData?: () => { title?: string };
   destroy(): void;
+}
+
+export type YtSearchHit = {
+  id: string;
+  title: string;
+  channel: string;
+  thumb: string;
+};
+
+/** Curated study radios. Played via the IFrame API; search uses Data API when a key is set. */
+export const YOUTUBE_STATIONS: Array<{ id: string; label: string; hint: string }> = [
+  { id: "jfKfPfyJRdk", label: "Lofi", hint: "Beats to read to" },
+  { id: "4xDzrJKXOOY", label: "Synthwave", hint: "Night drive" },
+  { id: "Dx5qFachd3A", label: "Jazz cafe", hint: "Soft instruments" },
+  { id: "4Tr0otuiQuU", label: "Piano", hint: "Quiet classical" },
+  { id: "mPZkdNFkNPo", label: "Rain film", hint: "Long rain video" },
+];
+
+export async function searchYouTube(q: string): Promise<{ configured: boolean; results: YtSearchHit[]; error?: string }> {
+  const query = q.trim().slice(0, 80);
+  if (query.length < 2) return { configured: true, results: [] };
+  try {
+    const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
+    const data = (await res.json()) as { configured?: boolean; results?: YtSearchHit[]; error?: string };
+    return {
+      configured: data.configured !== false,
+      results: Array.isArray(data.results) ? data.results : [],
+      error: typeof data.error === "string" ? data.error : undefined,
+    };
+  } catch {
+    return { configured: false, results: [], error: "Couldn't reach YouTube search." };
+  }
 }
 
 interface YTNamespace {

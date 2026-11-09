@@ -6,6 +6,7 @@ import { useNow } from "@/hooks/useNow";
 import { soundscape, tensionFor } from "@/lib/soundscape";
 import { getRemainingMs, useFocusStore } from "@/store/useFocusStore";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useYouTubeAudioStore } from "@/store/useYouTubeAudioStore";
 
 /**
  * Owns the actual oscillators. UI pickers (SoundscapePlayer) only write settings.
@@ -28,8 +29,9 @@ export function SoundscapeHost() {
     status === "running" && now !== null
       ? getRemainingMs({ status, endsAt, remainingMs: remainingMsStored }, now)
       : remainingMsStored;
+  const ytPlaying = useYouTubeAudioStore((s) => Boolean(s.playing && s.videoId));
   const running = status === "running";
-  const shouldPlay = kind !== "off" && (running || onStudy);
+  const shouldPlay = kind !== "off" && (running || onStudy) && !ytPlaying;
 
   useEffect(() => {
     if (shouldPlay) void soundscape.play(kind, volume);

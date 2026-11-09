@@ -1,12 +1,13 @@
 "use client";
 
-import { Clock3, ListVideo, Maximize2, MessageSquarePlus, Minimize2, MonitorPlay, ParkingSquare, Play, Trash2 } from "lucide-react";
+import { Clock3, ListVideo, Loader2, Maximize2, MessageSquarePlus, Minimize2, MonitorPlay, ParkingSquare, Play, Search, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import { formatTimestamp } from "@/lib/time";
-import { loadYouTubeApi, parseYouTubeId, type YTPlayer } from "@/lib/youtube";
+import { loadYouTubeApi, parseYouTubeId, searchYouTube, type YTPlayer, type YtSearchHit } from "@/lib/youtube";
 import { useParkingLotStore } from "@/store/useParkingLotStore";
 import { useStudyStore } from "@/store/useStudyStore";
 import { useTaskStore } from "@/store/useTaskStore";
+import { useYouTubeAudioStore } from "@/store/useYouTubeAudioStore";
 import { Button, IconButton } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { EmptyState } from "@/components/ui/Misc";
@@ -59,6 +60,8 @@ export function VideoStudy() {
   const [speed, setSpeed] = useState<number>(1);
   const [chunkPrompt, setChunkPrompt] = useState<number | null>(null); // chunk index just finished
   const [note, setNote] = useState("");
+  const [hits, setHits] = useState<YtSearchHit[]>([]);
+  const [searching, setSearching] = useState(false);
 
   const playerRef = useRef<YTPlayer | null>(null);
   const mountRef = useRef<HTMLDivElement>(null);
@@ -85,6 +88,7 @@ export function VideoStudy() {
       setVideoId(id);
       setReady(false);
       lastChunkRef.current = -1;
+      useYouTubeAudioStore.getState().pause();
       upsertVideo({ videoId: id, url: sourceUrl });
     },
     [upsertVideo],
@@ -93,12 +97,31 @@ export function VideoStudy() {
   const submitUrl = (e: FormEvent) => {
     e.preventDefault();
     const id = parseYouTubeId(url);
-    if (!id) {
-      setError("That doesn't look like a YouTube link. Paste the full URL or the 11-character id.");
+    if (id) {
+      open(id, url.trim());
+      setUrl("");
+      setHits([]);
       return;
     }
-    open(id, url.trim());
-    setUrl("");
+    if (url.trim().length < 2) {
+      setError("Paste a YouTube link, or type a search.");
+      return;
+    }
+    setError(null);
+    setSearching(true);
+    void searchYouTube(url).then((res) => {
+      setSearching(false);
+      if (res.results.length) {
+        setHits(res.results);
+        return;
+      }
+      setHits([]);
+      setError(
+        res.configured
+          ? (res.error ?? "No videos found. Paste a full YouTube link.")
+          : "Paste a full YouTube link, or add YOUTUBE_API_KEY to search.",
+      );
+    });
   };
 
   // Create / replace the player when the video changes.
@@ -257,12 +280,39 @@ export function VideoStudy() {
   return (
     <div className="flex flex-col gap-5">
       <form onSubmit={submitUrl} className="flex flex-col gap-2 sm:flex-row">
-        <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a YouTube lecture link" aria-label="YouTube URL" inputMode="url" />
-        <Button type="submit" variant="primary" disabled={!url.trim()}>
-          <MonitorPlay className="size-4" /> Open in lecture mode
+        <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Paste a YouTube link, or search" aria-label="YouTube URL or search" />
+        <Button type="submit" variant="primary" disabled={!url.trim() || searching}>
+          {searching ? <Loader2 className="size-4 animate-spin" /> : parseYouTubeId(url) ? <MonitorPlay className="size-4" /> : <Search className="size-4" />}
+          {parseYouTubeId(url) ? "Open in lecture mode" : "Search YouTube"}
         </Button>
       </form>
       {error ? <p className="text-sm text-urgent">{error}</p> : null}
+      {hits.length > 0 ? (
+        <ul className="grid gap-2 sm:grid-cols-2">
+          {hits.map((h) => (
+            <li key={h.id}>
+              <button
+                type="button"
+                onClick={() => {
+                  open(h.id, `https://www.youtube.com/watch?v=${h.id}`);
+                  setHits([]);
+                  setUrl("");
+                }}
+                className="flex w-full items-center gap-3 rounded-xl border border-border bg-surface-raised p-2 text-left hover:border-ink-faint"
+              >
+                {h.thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={h.thumb} alt="" width={96} height={54} className="h-12 w-[5.4rem] shrink-0 rounded-md object-cover" />
+                ) : null}
+                <span className="min-w-0">
+                  <span className="block truncate text-sm text-ink">{h.title}</span>
+                  <span className="block truncate text-xs text-ink-faint">{h.channel}</span>
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
 
       {videoId ? (
         <div className="grid gap-5 lg:grid-cols-[1fr_20rem]">

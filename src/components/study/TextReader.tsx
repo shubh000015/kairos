@@ -82,7 +82,7 @@ export function TextReader() {
             setKinetic(!kinetic);
           }}
           aria-pressed={kinetic}
-          title="Blur what's ahead; clear a tiny puzzle to unlock the next section"
+          title={kinetic ? "On: blurs what's next. Turn off to see the whole text." : "Optional. Off by default — the whole text stays visible."}
         >
           <Zap className="size-4" /> Kinetic
         </Button>

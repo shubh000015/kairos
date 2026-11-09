@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Geist_Mono, Outfit } from "next/font/google";
+import { Fraunces, Geist_Mono, Lexend, Outfit } from "next/font/google";
 import { ThemeApplier } from "@/components/theme/ThemeApplier";
 import { ThemeScript } from "@/components/theme/ThemeScript";
 import { Toaster } from "@/components/ui/Toast";
@@ -8,6 +8,7 @@ import "./globals.css";
 
 const outfit = Outfit({ variable: "--font-outfit", subsets: ["latin"] });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], style: ["normal", "italic"] });
+const lexend = Lexend({ variable: "--font-lexend", subsets: ["latin"], weight: ["400", "500", "600"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
@@ -32,7 +33,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${outfit.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${outfit.variable} ${fraunces.variable} ${lexend.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
         <ThemeScript />
       </head>

@@ -112,7 +112,7 @@ export function AppNav() {
       </nav>
 
       <Link href="/" className="fixed left-4 top-4 z-30 md:hidden" aria-label="kairos home">
-        <LogoMark className="size-7" />
+        <LogoMark className="h-7 w-9" />
       </Link>
     </>
   );

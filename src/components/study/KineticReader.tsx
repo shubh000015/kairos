@@ -116,7 +116,7 @@ export function KineticReader({ text, fontSize, bionic = false, initialUnlocked 
                 <BionicText text={chunk.text} enabled={bionic && !locked} />
               </div>
               {current && !done ? (
-                <Speedbump key={`bump-${chunk.id}`} chunk={chunk} index={i} onCleared={() => unlockNext(true)} onSkip={() => unlockNext(false)} />
+                <KineticSpeedbump key={`bump-${chunk.id}`} className="mt-6" chunk={chunk} index={i} onCleared={() => unlockNext(true)} onSkip={() => unlockNext(false)} />
               ) : null}
               {!locked && !current ? <hr className="my-6 border-border/70" /> : null}
             </div>
@@ -153,9 +153,10 @@ interface SpeedbumpProps {
   index: number;
   onCleared: () => void;
   onSkip: () => void;
+  className?: string;
 }
 
-function Speedbump({ chunk, index, onCleared, onSkip }: SpeedbumpProps) {
+export function KineticSpeedbump({ chunk, index, onCleared, onSkip, className = "" }: SpeedbumpProps) {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(() => makePuzzle(chunk.text, index));
   const [attempts, setAttempts] = useState(0);
   const [tried, setTried] = useState<string[]>([]);
@@ -186,7 +187,7 @@ function Speedbump({ chunk, index, onCleared, onSkip }: SpeedbumpProps) {
   if (!puzzle) {
     // Not enough text for a sensible gap — don't block the reader.
     return (
-      <div className="mt-6 flex items-center justify-center">
+      <div className={`flex items-center justify-center ${className}`}>
         <button type="button" onClick={onSkip} className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-4 py-2 text-sm text-ink hover:bg-surface-sunken">
           <ArrowDown className="size-4" aria-hidden="true" /> Continue reading
         </button>
@@ -243,7 +244,7 @@ function Speedbump({ chunk, index, onCleared, onSkip }: SpeedbumpProps) {
   const remaining = puzzle.options.filter((o) => !tried.includes(o));
 
   return (
-    <div className={`speedbump mt-6 rounded-2xl border px-4 py-4 text-[0.95rem] transition-colors sm:px-5 ${solved ? "border-accent/50 bg-accent-soft/60" : "border-border bg-surface"}`} role="group" aria-label="Quick check to unlock the next section">
+    <div className={`speedbump rounded-2xl border px-4 py-4 text-[0.95rem] transition-colors sm:px-5 ${solved ? "border-accent/50 bg-accent-soft/60" : "border-border bg-surface"} ${className}`} role="group" aria-label="Quick check to unlock the next section">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="eyebrow">{solved ? "Unlocked" : puzzle.kind === "drag" ? "Drag the word into the gap" : "Type the missing word"}</span>
         {!solved ? (

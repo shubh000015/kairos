@@ -12,7 +12,7 @@ export default function GlobalError({ error, reset }: { error: Error & { digest?
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-24 text-center">
-      <LogoMark className="size-12" />
+      <LogoMark className="h-14 w-[4.75rem] text-accent" />
       <h1 className="font-display text-3xl text-ink">Something hiccuped.</h1>
       <p className="max-w-md text-ink-muted">Not your fault, and your data is safe in this browser. Try again, or head back to the focus screen.</p>
       <div className="flex gap-2">

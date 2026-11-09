@@ -1,48 +1,90 @@
 /**
- * Brand mark: a thick open ring that brightens as it travels — washed indigo at
- * the base rising to light sage at the opening — with a terracotta satellite
- * resting in the gap and a deep-slate core at the centre.
+ * Brand mark: an open eye — presence without staring. Concentric iris rings
+ * and quiet radial ticks, lids that don't quite close. Sage line on parchment.
  *
- * The open gap is a forgiving structure (no closed streak). The satellite is
- * the next small step, already in reach. The core is the one thing in front
- * of you.
- *
- * Geometry: 22-radius arc with a 90° gap centred on the top-right. Keep this
- * path in lockstep with `src/app/icon.svg`.
+ * Geometry lives here and in `src/app/icon.svg` (simplified for the favicon).
  */
-const RING = "M 50.56 31.17 A 22 22 0 1 1 32.83 9.44";
 
-export function LogoMark({ className = "size-8" }: { className?: string }) {
+const CX = 60;
+const CY = 44;
+
+function rays(r0: number, r1: number, count: number) {
+  return Array.from({ length: count }, (_, i) => {
+    const a = (i / count) * Math.PI * 2 - Math.PI / 2;
+    return {
+      x1: CX + Math.cos(a) * r0,
+      y1: CY + Math.sin(a) * r0,
+      x2: CX + Math.cos(a) * r1,
+      y2: CY + Math.sin(a) * r1,
+    };
+  });
+}
+
+const INNER_TICKS = rays(7.4, 16.6, 16);
+const OUTER_RAYS = rays(19.2, 24, 8);
+
+export function LogoMark({ className = "h-8 w-11" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="qf-ring-grad" x1="10" y1="54" x2="54" y2="10" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#6B7A8F" />
-          <stop offset="0.5" stopColor="#84A59D" />
-          <stop offset="1" stopColor="#A8C0B9" />
-        </linearGradient>
-        <radialGradient id="qf-core-grad" cx="0.35" cy="0.3" r="1.1">
-          <stop offset="0" stopColor="#46535f" />
-          <stop offset="1" stopColor="#2C363F" />
-        </radialGradient>
-      </defs>
-      {/* Parchment disc + hairline halo keep the mark legible on any surface. */}
-      <circle cx="32" cy="32" r="30" className="fill-surface-raised" />
-      <circle cx="32" cy="32" r="29.25" fill="none" stroke="#2C363F" strokeOpacity="0.08" strokeWidth="1.5" />
-      <path d={RING} fill="none" stroke="url(#qf-ring-grad)" strokeWidth="7" strokeLinecap="round" />
-      {/* Terracotta satellite in the gap: the next small step, already in reach. */}
-      <circle cx="45.6" cy="17.1" r="3.1" fill="#E27D60" />
-      <circle cx="32" cy="32" r="6" fill="url(#qf-core-grad)" />
-      <circle cx="30.2" cy="30.2" r="1.5" fill="#F7F5F0" fillOpacity="0.55" />
+    <svg viewBox="0 0 120 88" className={className} aria-hidden="true" fill="none">
+      <g className="stroke-current" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M26 47C38 22 84 18 96 42" strokeWidth="3.1" />
+        <path d="M22 49C36 74 88 76 100 46" strokeWidth="3.1" />
+        <circle cx={CX} cy={CY} r="18.2" strokeWidth="2.2" />
+        <circle cx={CX} cy={CY} r="12.2" strokeWidth="2" />
+        <circle cx={CX} cy={CY} r="6.6" strokeWidth="2" />
+        {INNER_TICKS.map((l, i) => (
+          <line key={`in-${i}`} {...l} strokeWidth="1.7" />
+        ))}
+        {OUTER_RAYS.map((l, i) => (
+          <line key={`out-${i}`} {...l} strokeWidth="2" />
+        ))}
+      </g>
+      <circle cx={CX} cy={CY} r="3.3" className="fill-current" />
     </svg>
   );
 }
 
-export function Logo({ className = "", compact = false }: { className?: string; compact?: boolean }) {
+function Wordmark({ stacked = false }: { stacked?: boolean }) {
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <LogoMark className="size-8" />
-      {!compact ? <span className="font-display text-xl lowercase tracking-tight text-ink">kairos</span> : null}
+    <span className={`inline-flex flex-col ${stacked ? "items-center" : "items-start"}`}>
+      <span className="font-logo text-[0.95rem] leading-none text-current sm:text-base">Kairos</span>
+      {stacked ? (
+        <span className="mt-1.5 font-logo text-[0.58rem] tracking-[0.42em] text-current/80">Since 2026</span>
+      ) : null}
+    </span>
+  );
+}
+
+export function Logo({
+  className = "",
+  compact = false,
+  stacked = false,
+}: {
+  className?: string;
+  compact?: boolean;
+  stacked?: boolean;
+}) {
+  if (compact) {
+    return (
+      <span className={`inline-flex text-accent ${className}`}>
+        <LogoMark className="h-8 w-11" />
+      </span>
+    );
+  }
+
+  if (stacked) {
+    return (
+      <span className={`inline-flex flex-col items-center gap-2.5 text-accent ${className}`}>
+        <LogoMark className="h-[4.25rem] w-[5.8rem]" />
+        <Wordmark stacked />
+      </span>
+    );
+  }
+
+  return (
+    <span className={`inline-flex items-center gap-2.5 text-accent ${className}`}>
+      <LogoMark className="h-8 w-11" />
+      <Wordmark />
     </span>
   );
 }

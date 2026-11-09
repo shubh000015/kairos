@@ -4,7 +4,7 @@ import { localFirstStorage } from "./storage";
 
 export type ThemePref = "system" | "light" | "dark";
 export type FontScale = "normal" | "large";
-export type SoundscapeKind = "off" | "lofi" | "brown" | "pink" | "white" | "rain";
+export type SoundscapeKind = "off" | "lofi" | "brown" | "pink" | "white" | "rain" | "fan" | "cafe" | "ocean" | "fire";
 
 export interface SettingsState {
   theme: ThemePref;

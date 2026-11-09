@@ -54,15 +54,9 @@ class SoundscapeEngine {
     src.buffer = buildBuffer(ctx, kind);
     src.loop = true;
     let last: AudioNode = src;
-    if (kind === "rain") {
-      const lp = ctx.createBiquadFilter();
-      lp.type = "lowpass";
-      lp.frequency.value = 1400;
-      const hp = ctx.createBiquadFilter();
-      hp.type = "highpass";
-      hp.frequency.value = 300;
-      src.connect(lp).connect(hp);
-      last = hp;
+    for (const node of filtersFor(kind, ctx)) {
+      last.connect(node);
+      last = node;
     }
     // Tremolo stage: gain = 1 - depth/2 + LFO * depth/2. Depth 0 when calm.
     this.pulse = ctx.createGain();
@@ -173,6 +167,31 @@ function buildBuffer(ctx: AudioContext, kind: SoundscapeKind): AudioBuffer {
           data[i] = white * swell * 0.6;
           break;
         }
+        case "fan":
+          brown = (brown + 0.015 * white) / 1.015;
+          data[i] = brown * 3.2;
+          break;
+        case "cafe": {
+          const t = i / rate;
+          const murmur = (b0 = 0.97 * b0 + white * 0.12) * 0.35;
+          const clink = Math.random() > 0.9994 ? white * 0.45 : 0;
+          const swell = 0.85 + 0.15 * Math.sin(t * 0.35 + ch);
+          data[i] = (murmur + clink) * swell;
+          break;
+        }
+        case "ocean": {
+          const t = i / rate;
+          brown = (brown + 0.02 * white) / 1.02;
+          const swell = 0.55 + 0.45 * Math.sin(t * 0.28 + ch) * Math.sin(t * 0.11);
+          data[i] = brown * 3.2 * swell;
+          break;
+        }
+        case "fire": {
+          brown = (brown + 0.03 * white) / 1.03;
+          const pop = Math.random() > 0.997 ? white * (0.3 + Math.random() * 0.5) : 0;
+          data[i] = brown * 2.4 + pop;
+          break;
+        }
         default:
           data[i] = 0;
       }
@@ -193,6 +212,35 @@ export function tensionFor(remainingMs: number, durationMs: number): number {
   return Math.min(1, Math.max(0, 1 - remainingMs / window));
 }
 
+function filtersFor(kind: SoundscapeKind, ctx: AudioContext): AudioNode[] {
+  const lp = (hz: number) => {
+    const n = ctx.createBiquadFilter();
+    n.type = "lowpass";
+    n.frequency.value = hz;
+    return n;
+  };
+  const hp = (hz: number) => {
+    const n = ctx.createBiquadFilter();
+    n.type = "highpass";
+    n.frequency.value = hz;
+    return n;
+  };
+  switch (kind) {
+    case "rain":
+      return [lp(1400), hp(300)];
+    case "ocean":
+      return [lp(700), hp(60)];
+    case "fan":
+      return [lp(780)];
+    case "cafe":
+      return [lp(2600), hp(180)];
+    case "fire":
+      return [lp(1600), hp(90)];
+    default:
+      return [];
+  }
+}
+
 export const SOUNDSCAPE_OPTIONS: Array<{ value: SoundscapeKind; label: string; hint: string }> = [
   { value: "off", label: "Off", hint: "Silence" },
   { value: "lofi", label: "Lo-fi", hint: "A slow groove that quietly picks up near the end" },
@@ -200,4 +248,8 @@ export const SOUNDSCAPE_OPTIONS: Array<{ value: SoundscapeKind; label: string; h
   { value: "pink", label: "Pink", hint: "Softer than white" },
   { value: "rain", label: "Rain", hint: "Gentle downpour" },
   { value: "white", label: "White", hint: "Classic static" },
+  { value: "fan", label: "Fan", hint: "Steady airflow" },
+  { value: "cafe", label: "Cafe", hint: "Soft room murmur" },
+  { value: "ocean", label: "Ocean", hint: "Slow shore wash" },
+  { value: "fire", label: "Fire", hint: "Low crackle" },
 ];
