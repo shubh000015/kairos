@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Kairos</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="head">
+      <div>
+        <div class="eyebrow">Kairos</div>
+        <h1>Parking lot</h1>
+      </div>
+      <button id="clear" class="link" type="button">Clear all</button>
+    </header>
+
+    <ul id="list" class="list" aria-live="polite"></ul>
+    <p id="empty" class="empty" hidden>Nothing parked. Good sign.</p>
+
+    <section class="settings">
+      <label class="row">
+        <span>Speedbump every</span>
+        <select id="interval">
+          <option value="5">5 min</option>
+          <option value="10" selected>10 min</option>
+          <option value="15">15 min</option>
+          <option value="20">20 min</option>
+        </select>
+      </label>
+      <label class="row">
+        <span>Summary length</span>
+        <select id="minChars">
+          <option value="15" selected>15 chars</option>
+          <option value="40">40 chars</option>
+          <option value="80">80 chars</option>
+        </select>
+      </label>
+      <label class="row">
+        <span>Speedbumps on</span>
+        <input id="enabled" type="checkbox" checked />
+      </label>
+    </section>
+    <script src="popup.js"></script>
+  </body>
+</html>

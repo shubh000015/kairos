@@ -1,0 +1,429 @@
+@import "tailwindcss";
+
+/* Theme is driven by data-theme on <html> (set before paint by ThemeScript). */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+  Cognitive Calm palette — tactile minimalism.
+  Warm parchment canvas, bone cards, sage actions, terracotta notices.
+  No pure white, no pure black, no neon, no alarm red.
+*/
+@theme {
+  /* Named swatches exist only as tints of the five Cognitive Calm colours. */
+  --color-sage-50: #f3f6f4;
+  --color-sage-100: #e4ece9;
+  --color-sage-200: #c9d9d4;
+  --color-sage-300: #a8c0b9;
+  --color-sage-400: #84a59d;
+  --color-sage-500: #84a59d;
+  --color-sage-600: #6b8e85;
+  --color-sage-700: #54756d;
+  --color-sage-800: #2c363f;
+  --color-sage-900: #2c363f;
+
+  --color-mist-50: #f4f5f7;
+  --color-mist-100: #e6e9ee;
+  --color-mist-200: #cdd4de;
+  --color-mist-300: #aeb8c6;
+  --color-mist-400: #8a97aa;
+  --color-mist-500: #6b7a8f;
+  --color-mist-600: #6b7a8f;
+  --color-mist-700: #566274;
+  --color-mist-800: #2c363f;
+  --color-mist-900: #2c363f;
+
+  --color-clay-100: #f8e8e2;
+  --color-clay-200: #f3cfc3;
+  --color-clay-300: #ebab98;
+  --color-clay-500: #e27d60;
+  --color-clay-700: #e27d60;
+
+  --font-sans: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+
+  --shadow-soft: 0 1px 1px rgb(44 54 63 / 0.04), 0 8px 20px -10px rgb(44 54 63 / 0.14);
+  --shadow-press: 0 1px 0 rgb(44 54 63 / 0.08);
+  --shadow-inset: inset 0 1px 2px rgb(44 54 63 / 0.08);
+}
+
+/* Semantic tokens that flip with colour scheme. */
+:root {
+  --surface: #f7f5f0;
+  --surface-raised: #ebe9e1;
+  --surface-sunken: #e2dfd6;
+  --border: #d6d2c8;
+  --ink: #2c363f;
+  --ink-muted: #6b7a8f;
+  --ink-faint: #8a97aa;
+  --accent: #84a59d;
+  --accent-soft: #dfe8e5;
+  --accent-ink: #2c363f;
+  --ring: #84a59d;
+  --urgent: #e27d60;
+  --urgent-soft: #f8e8e2;
+  --press: 3px;
+}
+
+:root[data-theme="dark"] {
+  /* Same five colours, dimmed — not a different charcoal theme. */
+  --surface: #2c363f;
+  --surface-raised: #3a434c;
+  --surface-sunken: #242c33;
+  --border: #4a545e;
+  --ink: #f7f5f0;
+  --ink-muted: #cdd4de;
+  --ink-faint: #8a97aa;
+  --accent: #84a59d;
+  --accent-soft: #3d4f4b;
+  --accent-ink: #f7f5f0;
+  --ring: #84a59d;
+  --urgent: #e27d60;
+  --urgent-soft: #4a322c;
+  --press: 3px;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Readability preferences (toggled in Settings). */
+:root[data-font-scale="large"] {
+  font-size: 112.5%;
+}
+:root[data-spacing="relaxed"] body {
+  letter-spacing: 0.02em;
+  word-spacing: 0.08em;
+  line-height: 1.8;
+}
+:root[data-motion="reduce"] *,
+:root[data-motion="reduce"] *::before,
+:root[data-motion="reduce"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Gentle entrance for cards/lists. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 320ms ease-out both;
+}
+
+/* Companion idle breathing. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.015);
+  }
+}
+.breathe {
+  animation: breathe 4s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+
+/* Reading ruler overlay. */
+.reading-mask {
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.35) 0,
+    rgb(0 0 0 / 0.35) calc(var(--ruler-y) - var(--ruler-h) / 2),
+    transparent calc(var(--ruler-y) - var(--ruler-h) / 2),
+    transparent calc(var(--ruler-y) + var(--ruler-h) / 2),
+    rgb(0 0 0 / 0.35) calc(var(--ruler-y) + var(--ruler-h) / 2),
+    rgb(0 0 0 / 0.35) 100%
+  );
+}
+
+/* Kinetic reading: locked sections are blurred; unlocking is a slow focus-pull. */
+.kinetic-chunk {
+  transition:
+    filter 700ms ease,
+    opacity 700ms ease;
+}
+.kinetic-locked {
+  filter: blur(7px);
+  opacity: 0.5;
+  user-select: none;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.25));
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.9), rgb(0 0 0 / 0.25));
+}
+.kinetic-read {
+  opacity: 0.78;
+}
+@keyframes wiggle {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-3px);
+  }
+  75% {
+    transform: translateX(3px);
+  }
+}
+.wiggle {
+  animation: wiggle 180ms ease-in-out 2;
+}
+
+/* Loot drop: cards shuffle, then one settles. */
+@keyframes loot-shuffle {
+  0% {
+    transform: translateY(0) rotate(-1.5deg);
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-6px) rotate(1.5deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+    opacity: 0.6;
+  }
+}
+.loot-shuffle {
+  animation: loot-shuffle 420ms ease-in-out infinite;
+}
+@keyframes loot-reveal {
+  0% {
+    transform: scale(0.94) translateY(8px);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.02) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+.loot-reveal {
+  animation: loot-reveal 520ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Final-stretch pulse on the soundscape indicator. */
+@keyframes pulse-dot {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+}
+.pulse-dot {
+  animation: pulse-dot var(--pulse-period, 0.8s) ease-in-out infinite;
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-border: var(--border);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-ring: var(--ring);
+  --color-urgent: var(--urgent);
+  --color-urgent-soft: var(--urgent-soft);
+  --shadow-press: var(--shadow-press);
+  --shadow-inset: var(--shadow-inset);
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Paper grain: a very faint noise layer that makes surfaces feel tactile instead of flat. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  mix-blend-mode: multiply;
+}
+:root[data-theme="dark"] body::before {
+  opacity: 0.07;
+  mix-blend-mode: screen;
+}
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Editorial display serif for headings; the sans stays for UI chrome. */
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+  font-weight: 540;
+  font-optical-sizing: auto;
+}
+
+/* Hand-set eyebrow labels. */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: lowercase;
+  color: var(--ink-faint);
+}
+
+/* A soft highlighter stroke behind key words. */
+.marker {
+  background: linear-gradient(transparent 58%, var(--accent-soft) 58%, var(--accent-soft) 92%, transparent 92%);
+  padding: 0 0.1em;
+}
+
+/* A faint top light on filled buttons so they read as machined objects, not flat fills. */
+.btn-sheen {
+  background-image: linear-gradient(to bottom, rgb(255 255 255 / 0.2), rgb(255 255 255 / 0) 55%);
+}
+
+/*
+  Tactile pressables: a bottom lip that recedes on :active, so primary
+  actions feel like objects you can press rather than flat colour.
+*/
+.btn-tactile {
+  border-bottom-width: var(--press);
+  border-bottom-style: solid;
+  border-bottom-color: color-mix(in srgb, #2c363f 28%, transparent);
+  transform: translateY(0);
+  transition:
+    transform 80ms ease,
+    border-bottom-width 80ms ease,
+    box-shadow 80ms ease,
+    background-color 160ms ease,
+    color 160ms ease;
+}
+.btn-tactile:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.btn-tactile:active:not(:disabled) {
+  transform: translateY(var(--press));
+  border-bottom-width: 0;
+  margin-bottom: var(--press);
+  box-shadow: var(--shadow-press);
+}
+:root[data-motion="reduce"] .btn-tactile,
+:root[data-motion="reduce"] .btn-tactile:hover,
+:root[data-motion="reduce"] .btn-tactile:active {
+  transform: none;
+  margin-bottom: 0;
+}
+
+/* Consistent, visible, non-aggressive focus ring. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
+}
+
+/*
+  Lecture fullscreen: the stage (player + overlays) fills the screen, not the
+  YouTube iframe. Chunk pauses, notes and parking stay on top of the video.
+*/
+.lecture-stage:fullscreen,
+.lecture-stage:-webkit-full-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  border-radius: 0;
+  border: 0;
+  background: #2c363f;
+}
+.lecture-stage:fullscreen .lecture-player,
+.lecture-stage:-webkit-full-screen .lecture-player {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  aspect-ratio: auto !important;
+  border-radius: 0;
+}
+.lecture-hud {
+  display: none;
+}
+.lecture-stage:fullscreen .lecture-hud,
+.lecture-stage:-webkit-full-screen .lecture-hud,
+.study-studio:fullscreen .lecture-hud,
+.study-studio:-webkit-full-screen .lecture-hud,
+.lecture-hud.lecture-hud-on {
+  display: flex;
+}
+
+/*
+  Study studio: the whole study surface (tabs, content, music, parking, timer)
+  fills the screen so tools stay in-frame.
+*/
+.study-studio:fullscreen,
+.study-studio:-webkit-full-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  padding: 0.75rem 1rem 1rem;
+  overflow: hidden;
+  background: var(--surface);
+  color: var(--ink);
+}
+.study-studio:fullscreen .study-studio-body,
+.study-studio:-webkit-full-screen .study-studio-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+.study-studio:fullscreen .lecture-player,
+.study-studio:-webkit-full-screen .lecture-player {
+  aspect-ratio: auto !important;
+  min-height: min(58vh, 100%);
+}
+
+/* Respect reduced-motion globally. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

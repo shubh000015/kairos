@@ -1,0 +1,276 @@
+/* Kairos for YouTube — injected styles. Everything is prefixed `qf-`. */
+
+:root {
+  --qf-paper: #f7f5f0;
+  --qf-bone: #ebe9e1;
+  --qf-ink: #2c363f;
+  --qf-ink-muted: #6b7a8f;
+  --qf-ink-faint: #8a97aa;
+  --qf-moss: #84a59d;
+  --qf-clay: #e27d60;
+  --qf-border: rgba(44, 54, 63, 0.12);
+  --qf-shadow: 0 24px 60px rgba(44, 54, 63, 0.28), 0 2px 8px rgba(44, 54, 63, 0.16);
+  --qf-font: "Outfit", "Segoe UI", Roboto, system-ui, sans-serif;
+  --qf-serif: "Outfit", "Segoe UI", sans-serif;
+}
+
+/* Blur the player, not the overlay — the overlay sits inside the same container
+   so we blur only the <video> and YouTube's own chrome. */
+.qf-blur > video,
+.qf-blur .html5-video-container,
+.qf-blur .ytp-chrome-bottom,
+.qf-blur .ytp-gradient-bottom {
+  filter: blur(14px) saturate(0.6);
+  transition: filter 320ms ease;
+}
+
+/* ------------------------------------------------------------- speedbump */
+
+.qf-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2147483000;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(44, 54, 63, 0.55);
+  opacity: 0;
+  transition: opacity 220ms ease;
+  font-family: var(--qf-font);
+  cursor: default;
+}
+.qf-overlay--in {
+  opacity: 1;
+}
+
+.qf-card {
+  width: min(560px, 100%);
+  background: var(--qf-paper);
+  color: var(--qf-ink);
+  border-radius: 20px;
+  padding: 26px 28px 20px;
+  box-shadow: var(--qf-shadow);
+  transform: translateY(8px);
+  transition: transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-align: left;
+}
+.qf-overlay--in .qf-card {
+  transform: translateY(0);
+}
+
+.qf-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--qf-moss);
+  margin-bottom: 8px;
+}
+.qf-title {
+  font-family: var(--qf-serif);
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 1.15;
+  margin: 0 0 8px;
+  letter-spacing: -0.01em;
+}
+.qf-sub {
+  margin: 0 0 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--qf-ink-muted);
+}
+
+.qf-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 84px;
+  border: 1px solid var(--qf-border);
+  background: var(--qf-bone);
+  color: var(--qf-ink);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font: 15px/1.5 var(--qf-font);
+  outline: none;
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.qf-input:focus {
+  border-color: var(--qf-moss);
+  box-shadow: 0 0 0 4px rgba(132, 165, 157, 0.28);
+}
+.qf-input::placeholder {
+  color: var(--qf-ink-faint);
+}
+
+.qf-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--qf-ink-faint);
+}
+.qf-row--end {
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+.qf-counter {
+  font-variant-numeric: tabular-nums;
+  color: var(--qf-clay);
+}
+.qf-counter--ok {
+  color: var(--qf-moss);
+}
+.qf-hint {
+  text-align: right;
+}
+
+.qf-link {
+  background: none;
+  border: 0;
+  padding: 6px 2px;
+  font: 12px var(--qf-font);
+  color: var(--qf-ink-faint);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.qf-link:hover {
+  color: var(--qf-ink);
+}
+
+.qf-shake {
+  animation: qf-shake 280ms ease;
+}
+@keyframes qf-shake {
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-3px); }
+  80% { transform: translateX(3px); }
+}
+
+/* ----------------------------------------------------------- parking lot */
+
+:fullscreen .qf-fab,
+:-webkit-full-screen .qf-fab {
+  position: absolute;
+}
+:fullscreen .qf-lot,
+:-webkit-full-screen .qf-lot {
+  position: absolute;
+}
+
+.qf-fab {
+  position: fixed;
+  right: 20px;
+  bottom: 96px;
+  z-index: 2147483001;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--qf-moss);
+  color: var(--qf-ink);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(44, 54, 63, 0.28);
+  transition: transform 160ms ease, background 160ms ease;
+}
+.qf-fab:hover {
+  background: var(--qf-moss);
+  transform: translateY(-1px);
+}
+.qf-fab:active {
+  transform: translateY(0) scale(0.97);
+}
+.qf-fab:focus-visible {
+  outline: 3px solid rgba(132, 165, 157, 0.7);
+  outline-offset: 2px;
+}
+
+.qf-lot {
+  position: fixed;
+  right: 20px;
+  bottom: 156px;
+  z-index: 2147483001;
+  width: min(340px, calc(100vw - 40px));
+  background: var(--qf-paper);
+  color: var(--qf-ink);
+  border-radius: 16px;
+  padding: 14px 16px 12px;
+  box-shadow: var(--qf-shadow);
+  font-family: var(--qf-font);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 160ms ease, transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.qf-lot--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+.qf-lot-title {
+  font-family: var(--qf-serif);
+  font-size: 17px;
+  margin-bottom: 2px;
+}
+.qf-lot-sub {
+  font-size: 12px;
+  color: var(--qf-ink-muted);
+  margin-bottom: 10px;
+}
+.qf-lot-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--qf-border);
+  background: var(--qf-bone);
+  color: var(--qf-ink);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: 14px var(--qf-font);
+  outline: none;
+}
+.qf-lot-input:focus {
+  border-color: var(--qf-moss);
+  box-shadow: 0 0 0 4px rgba(132, 165, 157, 0.28);
+}
+.qf-lot-foot {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--qf-ink-faint);
+}
+
+/* ------------------------------------------------------------------ toast */
+
+.qf-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: 2147483002;
+  transform: translate(-50%, 8px);
+  background: var(--qf-ink);
+  color: var(--qf-paper);
+  padding: 10px 14px;
+  border-radius: 999px;
+  font: 13px var(--qf-font);
+  box-shadow: 0 10px 24px rgba(44, 54, 63, 0.28);
+  opacity: 0;
+  transition: opacity 180ms ease, transform 200ms ease;
+  pointer-events: none;
+}
+.qf-toast--in {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qf-overlay, .qf-card, .qf-lot, .qf-toast, .qf-fab, .qf-blur > video {
+    transition: none !important;
+  }
+  .qf-shake {
+    animation: none;
+  }
+}
