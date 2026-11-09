@@ -42,9 +42,9 @@ export function FocusDashboard() {
     <div className="grid gap-8 lg:grid-cols-[1fr_19rem]">
       <div className="flex flex-col gap-8">
         <header className={`transition-opacity duration-500 ${inFocus ? "opacity-0 pointer-events-none h-0 overflow-hidden" : ""}`}>
-          <p className="eyebrow mb-2">{todayMs > 0 ? `${formatDuration(todayMs)} of focus today` : "nothing counted yet, nothing missing"}</p>
-          <h1 className="font-display text-4xl lowercase tracking-tight text-ink sm:text-5xl">
-            {hello.toLowerCase()}. <span className="italic text-ink-muted">start small.</span>
+          <p className="eyebrow mb-2">{todayMs > 0 ? `${formatDuration(todayMs)} of focus today` : "Nothing counted yet — nothing missing"}</p>
+          <h1 className="font-display text-4xl tracking-tight text-ink sm:text-5xl">
+            {hello}. <span className="italic text-ink-muted">Start small.</span>
           </h1>
         </header>
 
@@ -75,29 +75,29 @@ export function FocusDashboard() {
 
         {!inFocus && suggestions.length > 0 ? (
           <section aria-label="Pick something" className="rise-in">
-            <p className="eyebrow mb-3">pick one, or don&apos;t</p>
-            <ul className="grid gap-2 sm:grid-cols-3">
+            <p className="eyebrow mb-3">Pick one, or don&apos;t</p>
+            <ul className="grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-3">
               {suggestions.map((t) => {
                 const step = nextStep(t);
                 return (
-                  <li key={t.id}>
-                    <button type="button" onClick={() => setActive(t.id)} className="flex h-full w-full flex-col items-start gap-1 rounded-2xl border border-border bg-surface-raised px-4 py-3 text-left shadow-soft transition-colors hover:border-accent">
+                  <li key={t.id} className="bg-surface-raised">
+                    <button type="button" onClick={() => setActive(t.id)} className="flex h-full w-full flex-col items-start gap-1 px-4 py-3.5 text-left transition-colors hover:bg-accent-soft/40">
                       <span className="line-clamp-2 text-ink">{t.title}</span>
-                      {step ? <span className="line-clamp-1 text-xs text-ink-muted">next: {step.text}</span> : <span className="text-xs text-ink-faint">no steps yet — that&apos;s fine</span>}
+                      {step ? <span className="line-clamp-1 text-xs text-ink-muted">Next: {step.text}</span> : <span className="text-xs text-ink-faint">No steps yet — that&apos;s fine</span>}
                     </button>
                   </li>
                 );
               })}
             </ul>
-            <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-ink-muted">
-              <Link href="/app/tasks" className="hover:text-ink">all tasks →</Link>
-              <Link href="/app/insights" className="hover:text-ink">minutes that only go up →</Link>
+            <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-ink-muted">
+              <Link href="/app/tasks" className="hover:text-ink">All tasks</Link>
+              <Link href="/app/insights" className="hover:text-ink">Minutes that only go up</Link>
             </div>
           </section>
         ) : null}
 
         {!inFocus && suggestions.length === 0 ? (
-          <Link href="/app/insights" className="text-sm text-ink-faint hover:text-ink">minutes that only go up →</Link>
+          <Link href="/app/insights" className="text-sm text-ink-faint hover:text-ink">Minutes that only go up</Link>
         ) : null}
 
         <ParkedThoughts />

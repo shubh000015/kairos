@@ -21,7 +21,7 @@ export function DayBar() {
   const leftLabel = left >= 1 ? `${Math.floor(left)}h ${Math.round((left % 1) * 60)}m left in the day` : "the day is winding down";
 
   return (
-    <div className="rounded-2xl border border-border bg-surface-raised px-4 py-3 shadow-soft">
+    <div className="rounded-xl border border-border bg-surface-raised px-4 py-3 shadow-soft">
       <div className="mb-2 flex items-baseline justify-between text-sm">
         <span className="text-ink">Now: <span className="font-medium tabular-nums">{timeLabel}</span></span>
         <span className="text-xs text-ink-faint">{leftLabel}</span>

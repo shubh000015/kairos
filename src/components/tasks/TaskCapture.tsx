@@ -30,7 +30,7 @@ export function TaskCapture({ autoFocus = false }: { autoFocus?: boolean }) {
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
-      <div className="flex items-center gap-2 rounded-2xl border border-border bg-surface-raised p-2 pl-4 shadow-soft focus-within:border-ring">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-surface-raised p-2 pl-4 shadow-soft focus-within:border-ring">
         <label htmlFor="task-capture" className="sr-only">
           Add a task
         </label>

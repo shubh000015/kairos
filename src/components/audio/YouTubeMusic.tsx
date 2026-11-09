@@ -43,7 +43,7 @@ export function YouTubeMusic() {
 
   return (
     <div className="mt-3 border-t border-border pt-3">
-      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium lowercase text-ink-muted">
+      <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-ink-muted">
         <MonitorPlay className="size-3.5" /> YouTube
       </div>
       <div className="mb-2 flex flex-wrap gap-1">

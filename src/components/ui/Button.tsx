@@ -3,7 +3,7 @@ import type { ButtonHTMLAttributes } from "react";
 type Variant = "primary" | "secondary" | "ghost" | "soft";
 type Size = "sm" | "md" | "lg";
 
-const base = "inline-flex items-center justify-center gap-2 rounded-xl font-medium select-none disabled:cursor-not-allowed disabled:opacity-50";
+const base = "inline-flex items-center justify-center gap-2 rounded-lg font-medium select-none disabled:cursor-not-allowed disabled:opacity-50";
 
 const variants: Record<Variant, string> = {
   primary: "btn-tactile btn-sheen bg-accent text-accent-ink shadow-soft hover:brightness-105",

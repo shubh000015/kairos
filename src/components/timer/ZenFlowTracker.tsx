@@ -88,7 +88,7 @@ export function ZenFlowTracker() {
   };
 
   return (
-    <section aria-label="Open flow" className="relative overflow-hidden rounded-3xl border border-border bg-surface-raised px-6 py-8 shadow-soft">
+    <section aria-label="Open flow" className="relative overflow-hidden rounded-xl border border-border bg-surface-raised px-6 py-8 shadow-soft">
       <div className="flex items-center justify-between gap-3">
         <p className="eyebrow">{running ? "open flow · no finish line" : "open flow"}</p>
         <div role="radiogroup" aria-label="Display" className="inline-flex rounded-lg border border-border bg-surface-sunken p-0.5">

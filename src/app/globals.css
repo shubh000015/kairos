@@ -43,10 +43,10 @@
   --font-display: var(--font-fraunces), "Iowan Old Style", Georgia, serif;
   --font-logo: var(--font-lexend), var(--font-outfit), ui-sans-serif, sans-serif;
 
-  --radius-xl: 1rem;
-  --radius-2xl: 1.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
 
-  --shadow-soft: 0 1px 1px rgb(44 54 63 / 0.04), 0 8px 20px -10px rgb(44 54 63 / 0.14);
+  --shadow-soft: 0 1px 0 rgb(44 54 63 / 0.04), 0 10px 28px -18px rgb(44 54 63 / 0.18);
   --shadow-press: 0 1px 0 rgb(44 54 63 / 0.08);
   --shadow-inset: inset 0 1px 2px rgb(44 54 63 / 0.08);
 }
@@ -275,7 +275,7 @@ body::before {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.07;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
   mix-blend-mode: multiply;
@@ -292,9 +292,10 @@ body > * {
 /* Editorial display serif for headings; the sans stays for UI chrome. */
 .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.015em;
-  font-weight: 540;
+  letter-spacing: -0.028em;
+  font-weight: 520;
   font-optical-sizing: auto;
+  font-variation-settings: "SOFT" 24, "WONK" 0;
 }
 
 /* Wordmark: Lexend is built for reading fluency (ADHD / dyslexia), with open tracking so the name stays calm at a glance. */
@@ -305,13 +306,21 @@ body > * {
   text-transform: uppercase;
 }
 
-/* Hand-set eyebrow labels. */
+/* Index labels — mono, short, uppercase. Reads as a contents page, not a sticker. */
 .eyebrow {
-  font-family: var(--font-sans);
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: lowercase;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
   color: var(--ink-faint);
+}
+
+.hero-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--border) 80%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--border) 80%, transparent) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse 70% 80% at 78% 42%, #000 10%, transparent 72%);
 }
 
 /* A soft highlighter stroke behind key words. */
@@ -362,6 +371,18 @@ body > * {
   outline: 2px solid var(--ring);
   outline-offset: 3px;
   border-radius: 0.5rem;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+details > summary {
+  list-style: none;
+}
+details > summary::-webkit-details-marker {
+  display: none;
 }
 
 /*

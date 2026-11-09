@@ -46,8 +46,8 @@ function StudyHubInner({ tab, onTab }: { tab: Tab; onTab: (id: Tab) => void }) {
 
   return (
     <div className={`flex min-h-0 flex-col ${tab === "pdf" ? "flex-1 gap-3" : "gap-6"}`}>
-      <div role="tablist" aria-label="Study tools" className={compact ? "study-tabs flex shrink-0 flex-wrap gap-1" : "study-tabs grid shrink-0 grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5"}>
-        {TABS.map((t) => {
+      <div role="tablist" aria-label="Study tools" className="study-tabs flex shrink-0 flex-wrap gap-0 border-b border-border">
+        {TABS.map((t, i) => {
           const active = t.id === tab;
           return (
             <button
@@ -55,16 +55,15 @@ function StudyHubInner({ tab, onTab }: { tab: Tab; onTab: (id: Tab) => void }) {
               role="tab"
               type="button"
               aria-selected={active}
+              title={t.blurb}
               onClick={() => onTab(t.id)}
-              className={`flex flex-col items-start gap-1 rounded-2xl border text-left transition-colors ${
-                compact ? "px-3 py-2" : "px-4 py-3"
-              } ${active ? "border-accent bg-accent-soft/60" : "border-border bg-surface-raised hover:border-ink-faint"}`}
+              className={`-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm transition-colors sm:px-4 ${
+                active ? "border-accent text-ink" : "border-transparent text-ink-muted hover:text-ink"
+              }`}
             >
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-ink">
-                {t.icon}
-                {t.label}
-              </span>
-              {compact ? null : <span className="text-xs text-ink-muted">{t.blurb}</span>}
+              <span className="hidden font-mono text-[10px] text-ink-faint sm:inline">{String(i + 1).padStart(2, "0")}</span>
+              {t.icon}
+              {t.label}
             </button>
           );
         })}

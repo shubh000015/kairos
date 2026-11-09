@@ -87,7 +87,7 @@ export function DistractionParkingLot() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[calc(6.75rem+env(safe-area-inset-bottom))] md:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
       <form
         onSubmit={submit}
-        className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-2xl border border-border bg-surface-raised/95 p-2 pl-3 shadow-soft backdrop-blur"
+        className="pointer-events-auto flex w-full max-w-xl items-center gap-2 rounded-xl border border-border bg-surface-raised/95 p-2 pl-3 shadow-soft backdrop-blur"
         aria-label="Distraction parking lot"
       >
         <ParkingSquare className="size-5 shrink-0 text-mist-500" aria-hidden="true" />

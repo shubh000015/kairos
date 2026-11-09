@@ -4,7 +4,7 @@ export function PageHeader({ title, description, action }: { title: string; desc
   return (
     <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
       <div>
-        <h1 className="font-display text-4xl lowercase tracking-tight text-ink">{title}</h1>
+        <h1 className="font-display text-4xl tracking-tight text-ink">{title}</h1>
         {description ? <p className="mt-1 max-w-prose text-ink-muted">{description}</p> : null}
       </div>
       {action}
@@ -14,7 +14,7 @@ export function PageHeader({ title, description, action }: { title: string; desc
 
 export function EmptyState({ icon, title, body, action }: { icon?: ReactNode; title: string; body?: string; action?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-10 text-center">
       {icon ? <div className="text-ink-faint">{icon}</div> : null}
       <div className="text-ink">{title}</div>
       {body ? <p className="max-w-sm text-sm text-ink-muted">{body}</p> : null}

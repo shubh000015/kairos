@@ -24,7 +24,7 @@ export function ParkedThoughts() {
 
   return (
     <section
-      className="w-full max-w-xl rounded-2xl border border-border bg-surface-raised shadow-soft"
+      className="w-full max-w-xl rounded-xl border border-border bg-surface-raised shadow-soft"
       aria-labelledby="parked-heading"
     >
       <button
@@ -32,7 +32,7 @@ export function ParkedThoughts() {
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
         aria-controls="parked-list"
-        className="flex w-full items-center justify-between gap-3 rounded-2xl px-5 py-4 text-left hover:bg-surface-sunken"
+        className="flex w-full items-center justify-between gap-3 rounded-xl px-5 py-4 text-left hover:bg-surface-sunken"
       >
         <span id="parked-heading" className="text-ink">
           You parked {parked.length} thought{parked.length === 1 ? "" : "s"}.{" "}

@@ -25,15 +25,18 @@ export function HeroPreview() {
 
   return (
     <div className="relative mx-auto w-full max-w-md" aria-hidden="true">
-      <div className="rounded-[2rem] border border-border bg-surface-raised p-6 shadow-soft">
-        <div className="eyebrow mb-3">right now</div>
-        <p className="mb-4 font-display text-xl lowercase leading-snug text-ink">open the textbook to the contents page</p>
-        <VisualTimer remainingMs={remaining} durationMs={DURATION} status="running" className="max-w-[16rem]" />
+      <div className="rounded-xl border border-border bg-surface-raised p-6 shadow-soft">
+        <div className="mb-4 flex items-center justify-between">
+          <span className="eyebrow">Now</span>
+          <span className="font-mono text-[11px] tabular-nums text-ink-faint">05:00</span>
+        </div>
+        <p className="mb-5 font-display text-2xl leading-snug text-ink">Open the textbook to the contents page</p>
+        <VisualTimer remainingMs={remaining} durationMs={DURATION} status="running" className="max-w-[15rem]" />
       </div>
-      <div className="absolute -bottom-6 left-1/2 flex w-[92%] -translate-x-1/2 items-center gap-2 rounded-2xl border border-border bg-surface-raised/95 p-2 pl-3 shadow-soft backdrop-blur">
-        <ParkingSquare className="size-5 shrink-0 text-mist-500" />
-        <span className={`flex-1 truncate text-sm ${parked ? "text-ink-faint" : "text-ink"}`}>{parked ? "Random thought? Park it here." : "remember to pay phone bill"}</span>
-        <span className={`inline-flex items-center gap-1 text-xs text-accent transition-opacity ${parked ? "opacity-100" : "opacity-0"}`}>
+      <div className="absolute -bottom-5 left-4 right-4 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 shadow-soft">
+        <ParkingSquare className="size-4 shrink-0 text-mist-500" />
+        <span className={`flex-1 truncate text-sm ${parked ? "text-ink-faint" : "text-ink"}`}>{parked ? "A thought? Park it." : "remember to pay phone bill"}</span>
+        <span className={`inline-flex items-center gap-1 font-mono text-[11px] text-accent transition-opacity ${parked ? "opacity-100" : "opacity-0"}`}>
           <Check className="size-3.5" /> Parked
         </span>
       </div>

@@ -234,7 +234,7 @@ export function PdfReader() {
           onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
           onDragLeave={() => setDragging(false)}
           onDrop={onDrop}
-          className={`flex cursor-pointer flex-col items-center gap-3 rounded-3xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
+          className={`flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed px-6 py-14 text-center transition-colors ${
             dragging ? "border-accent bg-accent-soft/50" : "border-border bg-surface-raised hover:border-ink-faint"
           }`}
         >
@@ -245,7 +245,7 @@ export function PdfReader() {
         </label>
         {error ? <p className="text-sm text-urgent">{error}</p> : null}
         {recents.length > 0 ? (
-          <div className="rounded-2xl border border-border bg-surface-raised p-4">
+          <div className="rounded-xl border border-border bg-surface-raised p-4">
             <h3 className="mb-2 text-sm font-medium text-ink-muted">You were reading</h3>
             <ul className="space-y-1 text-sm">
               {recents.map((r) => (

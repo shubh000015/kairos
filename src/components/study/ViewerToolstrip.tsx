@@ -82,7 +82,7 @@ function ToolPop({
       {open ? (
         <div className={`absolute right-0 z-50 max-h-[min(28rem,calc(100dvh-5rem))] w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-border bg-surface-raised p-3 shadow-soft ${pos}`}>
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium lowercase text-ink-muted">{label}</span>
+            <span className="eyebrow">{label}</span>
             <button type="button" aria-label="Close" onClick={onToggle} className="text-ink-faint hover:text-ink">
               <X className="size-3.5" />
             </button>

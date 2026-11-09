@@ -110,7 +110,7 @@ export function FocusSession() {
       {activeTask ? (
         <div className="rise-in relative w-full max-w-md">
           <AnimatePresence>{burst ? <CompletionBurst key="b" size={220} /> : null}</AnimatePresence>
-          <div className="relative z-10 rounded-2xl border border-border/70 bg-surface-raised px-5 py-5 shadow-soft">
+          <div className="relative z-10 rounded-xl border border-border/70 bg-surface-raised px-5 py-5 shadow-soft">
             <div className="mb-2 flex items-center justify-between">
               <span className="eyebrow">{step ? "right now" : "working on"}</span>
               <IconButton label="Clear active task" onClick={() => setActive(null)} className="size-7">

@@ -87,7 +87,7 @@ export function Insights() {
 
 function Stat({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-surface-raised px-4 py-3 shadow-soft">
+    <div className="rounded-xl border border-border bg-surface-raised px-4 py-3 shadow-soft">
       <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-ink-faint">{icon}{label}</div>
       <div className="mt-1 font-display text-3xl text-ink">{value}</div>
       <div className="text-sm text-ink-muted">{sub}</div>
