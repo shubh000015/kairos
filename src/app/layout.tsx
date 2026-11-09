@@ -30,7 +30,7 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${outfit.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}>
       <head>
